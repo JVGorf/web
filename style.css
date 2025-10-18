@@ -1,6 +1,6 @@
 body {
     font-family: sans-serif;
-    background-color: #1a1a1a;
+    background-color: #031d40;
     color: #fff;
     margin: 0;
     padding: 20px;
@@ -8,7 +8,9 @@ body {
 }
 
 header {
+    background-color: #010e20;
     margin-bottom: 40px;
+    padding: 20px 0;
 }
 
 h1 {
@@ -17,7 +19,7 @@ h1 {
 }
 
 nav a {
-    color: #fff;
+    color: #e3bc5e;
     text-decoration: none;
     margin: 0 15px;
     font-size: 1.2em;
@@ -31,9 +33,15 @@ main p {
 }
 
 footer {
+    background-color: #010e20;
     margin-top: 40px;
+    padding: 20px 0;
     font-size: 0.9em;
     color: #aaa;
+}
+
+footer a {
+    color: #e3bc5e;
 }
 
 @media (max-width: 600px) {
