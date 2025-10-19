@@ -24,6 +24,10 @@ nav a {
     font-size: 1.2em;
 }
 
+a:link {
+      color: #e3bc5e; /* Blue */
+    }
+
 main {
     max-width: 800px;
     margin: 0 auto;
