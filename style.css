@@ -28,6 +28,10 @@ a:link {
       color: #e3bc5e; /* Blue */
     }
 
+a:visited {
+      color: #e3bc5e; /* Purple */
+    }
+
 main {
     max-width: 800px;
     margin: 0 auto;
