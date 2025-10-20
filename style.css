@@ -17,6 +17,10 @@ h1 {
     margin-bottom: 10px;
 }
 
+h1, h2, h3, h4, h5 {
+    color: #e3bc5e; /* Light Yellow */
+}
+
 nav a {
     color: #e3bc5e;
     text-decoration: none;
@@ -25,11 +29,11 @@ nav a {
 }
 
 a:link {
-      color: #e3bc5e; /* Blue */
+      color: #e3bc5e; /* Light Yellow */
     }
 
 a:visited {
-      color: #e3bc5e; /* Purple */
+      color: #e3bc5e; /* Light Yellow */
     }
 
 main {
