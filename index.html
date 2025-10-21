@@ -1,27 +1,1315 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script src="clarity.js"></script>
-    <!-- Primary Meta Tags -->
-    <title>JV Gorf: Browser Based Games</title>
-    <link rel="shortcut icon" href="favicon.png" />
-    <meta name="description" content="A website dedicated to web games and web game developing.">
+<!-- MS Clarity -->
+<script type="text/javascript">
+    (function(c,l,a,r,i,t,y){
+        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+    })(window, document, "clarity", "script", "tscgnqbnd7");
+</script>
+<!-- End MS Clarity -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- End Primary Meta Tags -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐠</text></svg>">
+    <title>Idle Fish Tank Sim</title>
+    <meta name="description" content="An idle fish tank simulator that runs in your browser. As your fish eats, you will unlock new customization options and more fish.">
+    <style>
+        /* Basic styles to make the canvas fill the entire screen */
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden; /* Prevents scrollbars */
+            background-color: #000; /* Fallback color */
+            font-family: Arial, sans-serif;
+        }
+        canvas {
+            display: block; /* Removes any default spacing below the canvas */
+            cursor: pointer;
+        }
+        /* Styles for the options panel */
+        #settingsPanel {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: none; /* Initially hidden */
+            width: 280px; /* Increased width for new options */
+            max-height: 80vh; /* Set a maximum height to prevent overflow */
+            overflow-y: auto; /* Add a vertical scrollbar when needed */
+        }
+        /* Custom scrollbar for the options panel */
+        #settingsPanel::-webkit-scrollbar {
+            width: 8px;
+        }
+        #settingsPanel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        #settingsPanel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        #settingsPanel::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Custom scrollbar for the help panel */
+        #helpPanel::-webkit-scrollbar {
+            width: 8px;
+        }
+        #helpPanel::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        #helpPanel::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        #helpPanel::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        #settingsPanel.visible,
+        #helpPanel.visible {
+            display: block;
+        }
+        #helpPanel {
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            display: none; /* Initially hidden */
+            width: 280px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        #helpPanel h3 {
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+            margin-bottom: 10px;
+        }
+        #helpPanel p {
+            margin-bottom: 15px;
+            line-height: 1.4;
+            text-align: left;
+        }
+        #helpPanel p:last-child {
+            margin-bottom: 0;
+        }
+        #settingsPanel h3 {
+            margin-top: 0;
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        #settingsPanel label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        #settingsPanel input[type="text"],
+        #settingsPanel input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #333;
+            color: white;
+        }
+        #settingsPanel input[type="range"] {
+            padding: 0;
+            margin-top: 5px;
+        }
+        #settingsPanel .volume-display {
+            text-align: center;
+            font-size: 0.9em;
+            margin-bottom: 20px;
+        }
+        .color-section {
+            margin-top: 20px;
+        }
+        .color-section.locked {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .color-swatches {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .color-swatch {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: border-color 0.2s;
+            position: relative; /* Needed for checkmark positioning */
+        }
+        .color-swatch.selected {
+            border-color: #fff;
+        }
+        /* Style for the checkmark on selected colors */
+        .color-swatch.selected::after {
+            content: '✔'; /* Unicode checkmark character */
+            color: #555555; /* A solid, dark gray color */
+            font-size: 16px;
+            font-weight: bold;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-shadow: 0 0 3px rgba(255, 255, 255, 0.7); /* Helps visibility on dark colors */
+        }
+        #settingsPanel button {
+            width: 100%;
+            padding: 10px;
+            background-color: #0077be;
+            border: none;
+            color: white;
+            font-size: 1em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background-color 0.2s;
+        }
+        #settingsPanel button:hover {
+            background-color: #005d9c;
+        }
+        #lockedNotice {
+            position: absolute;
+            top: 20px;
+            left: 320px;
+            padding: 10px 15px;
+            background-color: rgba(220, 20, 60, 0.85);
+            color: white;
+            font-size: 0.9em;
+            border-radius: 5px;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        /* Styles for the sound notice */
+        #soundNotice {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px 40px;
+            background-color: rgba(0, 0, 0, 0.75);
+            color: white;
+            font-size: 1.2em;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+            pointer-events: none;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+    </style>
 </head>
 <body>
-    <header>
+    <canvas id="fishTankCanvas"></canvas>
+    <div id="soundNotice">Click anywhere to enable sounds.</div>
+    <div id="lockedNotice"></div>
 
-        <div id="navbar-placeholder"></div>
-    </header>
-    <main>
-        <h2>A Little Site About Browser Games</h2>
-        <p>I like browser games and I'm trying to learn how to make them. There's not much to see here, yet. As of October 18th 2025, I have completed one project. You can read all about it in my little <a href="/web/fishtank.html">Dev Blog</a>. </p>
-    </main>
-    <div id="footer-placeholder"></div>
-    <script src="navbar.js"></script>
-    <script src="footer.js"></script>
+    <div id="settingsPanel">
+        <h3>Options</h3>
+        <label for="fishNameInput">Fish Name:</label>
+        <input type="text" id="fishNameInput" maxlength="15" placeholder="Enter a name">
+        
+        <label for="maxAdditionalFishInput" style="margin-top: 20px;">Max Additional Fish:</label>
+        <input type="range" id="maxAdditionalFishInput" min="0" max="20" value="3">
+        <div class="volume-display" id="maxAdditionalFishValue">3</div>
+
+        <label for="volumeSlider" style="margin-top: 20px;">Background Volume:</label>
+        <input type="range" id="volumeSlider" min="0" max="10" value="5">
+        <div class="volume-display" id="volumeValue">5</div>
+
+        <label for="soundEffectsVolumeSlider" style="margin-top: 20px;">Sound Effects Volume:</label>
+        <input type="range" id="soundEffectsVolumeSlider" min="0" max="10" value="5">
+        <div class="volume-display" id="soundEffectsVolumeValue">5</div>
+
+        <label for="soundPromptSlider" style="margin-top: 20px;">Disable Startup Sound Prompt?</label>
+        <input type="range" id="soundPromptSlider" min="0" max="1" value="0">
+        <div class="volume-display" id="soundPromptValue" style="margin-bottom: 10px;">No</div>
+        
+        <div id="outlineColorSection" class="color-section">
+            <label>Outline Color (Requires 50 Food)</label>
+            <div class="color-swatches" id="outlineColorSwatches"></div>
+        </div>
+        
+        <div id="stripesColorSection" class="color-section">
+            <label>Stripes Color (Requires 100 Food)</label>
+            <div class="color-swatches" id="stripesColorSwatches"></div>
+        </div>
+
+        <div id="bodyColorSection" class="color-section">
+            <label>Body Color (Requires 150 Food)</label>
+            <div class="color-swatches" id="bodyColorSwatches"></div>
+        </div>
+
+        <label for="fpsMeterSlider" style="margin-top: 20px;">FPS Meter</label>
+        <input type="range" id="fpsMeterSlider" min="0" max="1" value="0">
+        <div class="volume-display" id="fpsMeterValue" style="margin-bottom: 10px;">Disabled</div>
+
+        <button id="saveSettingsBtn" style="margin-top: 10px;">Save</button>
+
+        <div id="credits-section" style="margin-top: 30px; text-align: center; font-size: 0.8em; color: #ccc;">
+            <h4 style="margin: 10px 0;">Credits</h4>
+            <p style="margin: 5px 0;">Development By <a href="https://jvgorf.github.io/web/" target="_blank" style="color: #00c3ff;">JV Gorf</a></p>
+            <p style="margin: 5px 0;">Background Sound By <a href="https://pixabay.com/users/joelfazhari-16466931/" target="_blank" style="color: #00c3ff;">JoelFazhari</a></p>
+            <p style="margin: 5px 0;">Sound Effects By <a href="https://pixabay.com/users/dragon-studio-38165424/" target="_blank" style="color: #00c3ff;">Dragon Studio</a></p>
+        </div>
+    </div>
+
+    <div id="helpPanel">
+        <h3>Help</h3>
+        <p>🐠 This is an idle fish tank sim. Here’s how to interact with your new aquatic friends.</p>
+
+        <p>🐠 Your fish’s name and score (food eaten) are at the top left. You do not need to actively feed your fish, s/he will eat food that appears from the sandy floor as it floats to the top. If you're impatient for unlocks, you can also drop food into the tank with the 'F' key.</p>
+
+        <p>🐠 As your fish eats, you will unlock new customization options and a new randomly colored fish will join for every 50 food consumed. There are over 5000 possible color combinations.</p>
+
+        <p>🐠 Click the ☰ icon to open the options panel. Here you can change your fish’s name, colors, and other settings. Your settings and progress is automatically stored in a cookie.</p>
+    </div>
+
+    <script>
+        // --- Canvas and Context Setup ---
+        const canvas = document.getElementById('fishTankCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- DOM Elements ---
+        const settingsPanel = document.getElementById('settingsPanel');
+        const helpPanel = document.getElementById('helpPanel');
+        const fishNameInput = document.getElementById('fishNameInput');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const soundEffectsVolumeSlider = document.getElementById('soundEffectsVolumeSlider');
+        const soundEffectsVolumeValue = document.getElementById('soundEffectsVolumeValue');
+        const maxAdditionalFishValue = document.getElementById('maxAdditionalFishValue');
+        const soundPromptSlider = document.getElementById('soundPromptSlider');
+        const soundPromptValue = document.getElementById('soundPromptValue');
+        const fpsMeterSlider = document.getElementById('fpsMeterSlider');
+        const fpsMeterValue = document.getElementById('fpsMeterValue');
+        const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+        const soundNotice = document.getElementById('soundNotice');
+        const lockedNotice = document.getElementById('lockedNotice');
+        let isSettingsOpen = false;
+        let isHelpOpen = false;
+        let noticeTimeout, lockedNoticeTimeout;
+        
+        // --- Constants & Global Variables ---
+        const OUTLINE_REQ = 50;
+        const STRIPES_REQ = 100;
+        const BODY_REQ = 150;
+        const colorOptions = ['#ff8c00', '#000000', '#ffffff', '#dc143c', '#ffd700', '#00ced1', '#4169e1', '#9370db', '#32cd32', '#ff4500', '#FFC0CB', '#A52A2A', '#808080', '#ADD8E6', '#FF00FF', '#00FFFF', '#008000', '#4B0082'];
+        let treasurePile = [];
+        let allFish = []; // Will hold all fish objects
+        let playerFish; // A direct reference to the player's fish
+
+        // Set initial canvas size
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        // --- Audio Setup ---
+        const bgMusic = new Audio('https://jvgorf.github.io/fishtank/JoelFazhari-aquarium-ambience-sounds-10-min-193236.mp3');
+        bgMusic.loop = true;
+        bgMusic.volume = 0.5;
+        const popSound = new Audio('https://jvgorf.github.io/fishtank/pop-402323-by-Dragon-Studio.mp3');
+
+        function hideSoundNotice() {
+            if (soundNotice) {
+                soundNotice.style.opacity = '0';
+                setTimeout(() => { if (soundNotice) soundNotice.remove(); }, 500);
+            }
+            clearTimeout(noticeTimeout);
+        }
+        function startAudio() {
+            hideSoundNotice();
+            const playPromise = bgMusic.play();
+            if (playPromise !== undefined) playPromise.catch(error => console.error("Audio playback failed:", error));
+            window.removeEventListener('mousedown', startAudio);
+            window.removeEventListener('touchstart', startAudio);
+        }
+        window.addEventListener('mousedown', startAudio);
+        window.addEventListener('touchstart', startAudio);
+        noticeTimeout = setTimeout(hideSoundNotice, 5000);
+
+        // --- Cookie Functions ---
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+        }
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let c of ca) {
+                c = c.trim();
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // --- Fish Data Persistence ---
+        function saveFishData() {
+            const data = {
+                name: playerFish.name,
+                foodEaten: playerFish.foodEaten,
+                volume: bgMusic.volume,
+                soundEffectsVolume: popSound.volume,
+                outlineColor: playerFish.outlineColor,
+                stripesColor: playerFish.stripesColor,
+                bodyColor: playerFish.bodyColor,
+                maxAdditionalFish: playerFish.maxAdditionalFish,
+                numAdditionalFish: playerFish.numAdditionalFish,
+                disableSoundPrompt: playerFish.disableSoundPrompt,
+                showFPS: playerFish.showFPS
+            };
+            setCookie('fishData', JSON.stringify(data), 3650);
+        }
+
+        function loadFishData() {
+            const savedData = getCookie('fishData');
+            if (savedData) {
+                try {
+                    const data = JSON.parse(savedData);
+                    playerFish.name = data.name || assignNewFishName();
+                    playerFish.foodEaten = data.foodEaten || 0;
+                    bgMusic.volume = (typeof data.volume === 'number') ? data.volume : 0.5;
+                    popSound.volume = (typeof data.soundEffectsVolume === 'number') ? data.soundEffectsVolume : 0.5;
+                    playerFish.outlineColor = data.outlineColor || '#000000';
+                    playerFish.stripesColor = data.stripesColor || '#ffffff';
+                    playerFish.bodyColor = data.bodyColor || '#ff8c00';
+                    playerFish.maxAdditionalFish = data.maxAdditionalFish !== undefined ? data.maxAdditionalFish : 3;
+                    if (playerFish.maxAdditionalFish > 20) playerFish.maxAdditionalFish = 20;
+                    playerFish.numAdditionalFish = data.numAdditionalFish || 0;
+                    if (playerFish.numAdditionalFish > 20) playerFish.numAdditionalFish = 20;
+                    playerFish.disableSoundPrompt = data.disableSoundPrompt || 0;
+                    playerFish.showFPS = data.showFPS || 0;
+                } catch (e) {
+                    console.error("Could not parse fish data from cookie.", e);
+                    assignNewFish();
+                }
+            } else {
+                assignNewFish();
+            }
+        }
+
+        function reconcileFish() {
+            const desiredNumAdditionalFish = Math.min(Math.floor(playerFish.foodEaten / 50), playerFish.maxAdditionalFish);
+            const diff = desiredNumAdditionalFish - playerFish.numAdditionalFish;
+
+            if (diff > 0) { // Add fish
+                for (let i = 0; i < diff; i++) {
+                    allFish.push(new Fish(false));
+                }
+                playerFish.numAdditionalFish += diff;
+                saveFishData();
+            } else if (diff < 0) { // Mark fish for removal
+                const numToRemove = -diff;
+                let removedCount = 0;
+                for (let i = allFish.length - 1; i >= 0; i--) {
+                    const fish = allFish[i];
+                    if (!fish.isPlayer && fish.state !== 'leaving') {
+                        fish.state = 'leaving';
+                        const exitSide = fish.x < canvas.width / 2 ? -100 : canvas.width + 100;
+                        fish.target = { x: exitSide, y: Math.random() * canvas.height };
+                        fish.speed = fish.originalSpeed * 2.5;
+                        removedCount++;
+                        if (removedCount >= numToRemove) {
+                            break;
+                        }
+                    }
+                }
+                playerFish.numAdditionalFish -= numToRemove;
+                if (playerFish.numAdditionalFish < 0) playerFish.numAdditionalFish = 0;
+                saveFishData();
+            }
+        }
+        
+        function assignNewFishName() {
+            const fishNames = ["Finley", "Goldie", "Bubbles", "Captain", "Coral", "Nemo", "Skipper", "Sunny", "Splash", "Wanda"];
+            return fishNames[Math.floor(Math.random() * fishNames.length)];
+        }
+
+        function assignNewFish() {
+            playerFish.name = assignNewFishName();
+            playerFish.foodEaten = 0;
+            bgMusic.volume = 0.5;
+            popSound.volume = 0.5;
+            playerFish.outlineColor = '#000000';
+            playerFish.stripesColor = '#ffffff';
+            playerFish.bodyColor = '#ff8c00';
+            playerFish.maxAdditionalFish = 3;
+            playerFish.numAdditionalFish = 0;
+            playerFish.disableSoundPrompt = 0;
+            playerFish.showFPS = 0;
+            saveFishData();
+        }
+
+        let lastTime = 0;
+        let fps = 0;
+        const fpsHistory = [];
+
+        // --- Fish Class ---
+        class Fish {
+            constructor(isPlayer = false) {
+                this.isPlayer = isPlayer;
+                // Start on either the left or right side of the screen
+                const startSide = Math.random() < 0.5 ? -50 : canvas.width + 50;
+                this.x = startSide;
+                this.y = Math.random() * (canvas.height - 200) + 100;
+
+                this.size = 25;
+                this.speed = 1;
+                this.originalSpeed = 1;
+                this.direction = (startSide < 0) ? 1 : -1; // Face towards the center
+                this.angle = 0;
+                this.currentAngle = 0;
+                this.state = 'swimming';
+                this.pauseTimer = 0;
+                this.pupilOffsetX = 0;
+                this.pupilOffsetY = 0;
+                this.pupilTargetX = 0;
+                this.pupilTargetY = 0;
+                this.pupilTimer = 120;
+                this.target = { x: Math.random() * canvas.width, y: Math.random() * (canvas.height - 200) + 50 };
+
+                if (isPlayer) {
+                    this.name = '';
+                    this.foodEaten = 0;
+                    this.bodyColor = '#ff8c00';
+                    this.stripesColor = '#ffffff';
+                    this.outlineColor = '#000000';
+                    this.maxAdditionalFish = 3;
+                    this.numAdditionalFish = 0;
+                    this.disableSoundPrompt = 0;
+                    this.showFPS = 0;
+                } else {
+                    this.bodyColor = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+                    this.stripesColor = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+                    this.outlineColor = colorOptions[Math.floor(Math.random() * colorOptions.length)];
+                }
+            }
+
+            draw() {
+                ctx.save();
+                ctx.translate(this.x, this.y);
+                ctx.scale(this.direction, 1);
+                ctx.rotate(this.currentAngle);
+
+                const xOffset = this.size * 0.95; // Center the fish drawing
+
+                const bodyPath = new Path2D();
+                bodyPath.moveTo(xOffset, 0);
+                bodyPath.quadraticCurveTo(-this.size * 0.7 + xOffset, -this.size * 0.9, -this.size * 1.5 + xOffset, 0);
+                bodyPath.quadraticCurveTo(-this.size * 0.7 + xOffset, this.size * 0.9, xOffset, 0);
+
+                const tailPath = new Path2D();
+                tailPath.moveTo(-this.size * 1.5 + xOffset, 0);
+                tailPath.quadraticCurveTo(-this.size * 1.7 + xOffset, -this.size * 0.5, -this.size * 1.9 + xOffset, -this.size * 0.4);
+                tailPath.lineTo(-this.size * 1.9 + xOffset, this.size * 0.4);
+                tailPath.quadraticCurveTo(-this.size * 1.7 + xOffset, this.size * 0.5, -this.size * 1.5 + xOffset, 0);
+                tailPath.closePath();
+                
+                const fullFishPath = new Path2D(bodyPath);
+                fullFishPath.addPath(tailPath);
+
+                const stripe1Path = new Path2D();
+                stripe1Path.moveTo(-this.size * 0.4 + xOffset, -this.size * 0.65);
+                stripe1Path.quadraticCurveTo(-this.size * 0.2 + xOffset, 0, -this.size * 0.4 + xOffset, this.size * 0.65);
+                stripe1Path.lineTo(-this.size * 0.6 + xOffset, this.size * 0.6);
+                stripe1Path.quadraticCurveTo(-this.size * 0.4 + xOffset, 0, -this.size * 0.6 + xOffset, -this.size * 0.6);
+                stripe1Path.closePath();
+
+                const stripe2Path = new Path2D();
+                stripe2Path.moveTo(-this.size * 0.9 + xOffset, -this.size * 0.8);
+                stripe2Path.quadraticCurveTo(-this.size * 0.8 + xOffset, 0, -this.size * 0.9 + xOffset, this.size * 0.8);
+                stripe2Path.lineTo(-this.size * 1.1 + xOffset, this.size * 0.75);
+                stripe2Path.quadraticCurveTo(-this.size * 1.0 + xOffset, 0, -this.size * 1.1 + xOffset, -this.size * 0.75);
+                stripe2Path.closePath();
+
+                const stripe3Path = new Path2D();
+                stripe3Path.moveTo(-this.size * 1.4 + xOffset, -this.size * 0.45);
+                stripe3Path.quadraticCurveTo(-this.size * 1.35 + xOffset, 0, -this.size * 1.4 + xOffset, this.size * 0.45);
+                stripe3Path.lineTo(-this.size * 1.55 + xOffset, this.size * 0.4);
+                stripe3Path.quadraticCurveTo(-this.size * 1.5 + xOffset, 0, -this.size * 1.55 + xOffset, -this.size * 0.4);
+                stripe3Path.closePath();
+
+                ctx.fillStyle = this.bodyColor;
+                ctx.fill(bodyPath);
+                ctx.fill(tailPath);
+
+                const drawStripe = (path) => {
+                    ctx.fillStyle = this.stripesColor;
+                    ctx.fill(path);
+                    ctx.strokeStyle = this.outlineColor;
+                    ctx.lineWidth = this.size * 0.08;
+                    ctx.stroke(path);
+                };
+                
+                ctx.save();
+                ctx.clip(fullFishPath);
+                drawStripe(stripe1Path);
+                drawStripe(stripe2Path);
+                drawStripe(stripe3Path);
+                ctx.restore();
+
+                ctx.strokeStyle = this.outlineColor;
+                ctx.lineWidth = this.size * 0.06;
+                ctx.stroke(bodyPath);
+                ctx.stroke(tailPath);
+                
+                const eyeRadius = this.size * 0.2, pupilRadius = this.size * 0.1;
+                ctx.fillStyle = 'white';
+                ctx.beginPath();
+                ctx.arc(-this.size * 0.3 + xOffset, -this.size * 0.15, eyeRadius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                ctx.fillStyle = '#000000';
+                ctx.beginPath();
+                ctx.arc(-this.size * 0.3 + xOffset + this.pupilOffsetX, -this.size * 0.15 + this.pupilOffsetY, pupilRadius, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.restore();
+            }
+
+            update() {
+                // State transitions (Player fish only)
+                if (this.isPlayer) {
+                    if (foodBubble.active && this.state !== 'eating' && foodBubble.y < canvas.height - 120) {
+                        this.state = 'eating';
+                        this.target = foodBubble;
+                        this.speed = this.originalSpeed * 2;
+                    } else if (this.state === 'eating' && !foodBubble.active) {
+                        this.speed = this.originalSpeed;
+                        this.setNewTarget();
+                    }
+                }
+
+                // Handle actions based on state
+                if (this.state === 'pausing' || this.state === 'inspecting') {
+                    this.pauseTimer--;
+                    this.angle = 0;
+                    if (this.pauseTimer <= 0) {
+                        this.setNewTarget();
+                    }
+                } else { // Handle movement
+                    const target = this.state === 'eating' ? foodBubble : this.target;
+                    const dx = target.x - this.x;
+                    const dy = target.y - this.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < this.size + 5) { // Arrived at target
+                        this.angle = 0;
+                        if (this.isPlayer && this.state === 'eating') {
+                            foodBubble.active = false;
+                            this.foodEaten++;
+                            popSound.play();
+                            saveFishData();
+                            reconcileFish();
+                            this.speed = this.originalSpeed;
+                            this.setNewTarget();
+                        } else if (this.state === 'investigating') {
+                            this.state = 'inspecting';
+                            this.pauseTimer = Math.random() * 180 + 180;
+                        } else {
+                            if (Math.random() < 0.2) {
+                                this.setInvestigationTarget();
+                            } else if (Math.random() < 0.1) {
+                                this.state = 'pausing';
+                                this.pauseTimer = Math.random() * 180 + 60;
+                            } else {
+                                this.setNewTarget();
+                            }
+                        }
+                    } else { // Move towards target
+                        this.x += (dx / dist) * this.speed;
+                        this.y += (dy / dist) * this.speed;
+                        this.direction = (dx > 0) ? 1 : -1;
+                        let targetAngle = Math.atan2(dy, this.direction * dx);
+                        this.angle = (Math.abs(targetAngle) < (10 * Math.PI / 180)) ? 0 : targetAngle;
+                    }
+                }
+                this.currentAngle += (this.angle - this.currentAngle) * 0.1;
+
+                // Pupil animation
+                const maxOffset = this.size * 0.1;
+                if (this.isPlayer && foodBubble.active) {
+                    const foodDX = foodBubble.x - this.x, foodDY = foodBubble.y - this.y;
+                    const foodDX_rel = foodDX * this.direction;
+                    const dist = Math.sqrt(foodDX_rel * foodDX_rel + foodDY * foodDY);
+                    if (dist > 1) {
+                        this.pupilTargetX = (foodDX_rel / dist) * maxOffset;
+                        this.pupilTargetY = (foodDY / dist) * maxOffset;
+                    }
+                } else {
+                    this.pupilTimer--;
+                    if (this.pupilTimer <= 0) {
+                        if (this.pupilTargetX === 0 && this.pupilTargetY === 0) {
+                            if (this.state === 'inspecting') {
+                                this.pupilTargetX = (Math.random() * 0.5 + 0.4) * maxOffset;
+                                this.pupilTargetY = (Math.random() * 2 - 1) * maxOffset * 0.7;
+                            } else {
+                                this.pupilTargetX = (Math.random() * 2 - 1) * maxOffset;
+                                this.pupilTargetY = (Math.random() * 2 - 1) * maxOffset;
+                            }
+                            this.pupilTimer = Math.random() * 60 + 60;
+                        } else {
+                            this.pupilTargetX = 0;
+                            this.pupilTargetY = 0;
+                            const baseDelay = (this.state === 'pausing' || this.state === 'inspecting') ? 45 : 180;
+                            this.pupilTimer = Math.random() * 120 + baseDelay;
+                        }
+                    }
+                }
+                this.pupilOffsetX += (this.pupilTargetX - this.pupilOffsetX) * 0.08;
+                this.pupilOffsetY += (this.pupilTargetY - this.pupilOffsetY) * 0.08;
+            }
+            
+            setNewTarget() {
+                this.state = 'swimming';
+                const sandLevel = canvas.height - 100;
+                this.target = {
+                    x: Math.random() * (canvas.width - 100) + 50,
+                    y: Math.random() * (sandLevel - 80) + 50
+                };
+            }
+
+            setInvestigationTarget() {
+                this.state = 'investigating';
+                const castleBaseX = canvas.width * 0.75;
+                const castleBaseY = canvas.height - 70;
+                const castleScale = 1.5;
+                const keepWidth = 50 * castleScale;
+                const keepHeight = 120 * castleScale;
+                const wallWidth = 60 * castleScale;
+                const wallHeight = 70 * castleScale;
+                const gateHeight = 40 * castleScale;
+
+                const points = [
+                    // Castle parts
+                    { x: castleBaseX, y: castleBaseY - keepHeight / 2 }, // Keep
+                    { x: castleBaseX - keepWidth / 2 - wallWidth / 2, y: castleBaseY - wallHeight / 2 }, // Left Wall
+                    { x: castleBaseX + keepWidth / 2 + wallWidth / 2, y: castleBaseY - wallHeight / 2 }, // Right Wall
+                    { x: castleBaseX, y: castleBaseY - keepHeight - 25 * castleScale }, // Roof
+                    { x: castleBaseX, y: castleBaseY - gateHeight / 2 }, // Door
+
+                    // Rocks
+                    { x: 125, y: canvas.height - 80 },
+                    { x: canvas.width - 125, y: canvas.height - 90 },
+
+                    // Plants
+                    { x: canvas.width * 0.3, y: canvas.height - 170 },
+                    { x: canvas.width * 0.3 + 20, y: canvas.height - 160 },
+                    { x: canvas.width * 0.3 + 30, y: canvas.height - 150 },
+                    { x: canvas.width * 0.9, y: canvas.height - 180 },
+                    { x: canvas.width * 0.9 + 20, y: canvas.height - 160 },
+
+                    // Chest
+                    { x: canvas.width * 0.2, y: canvas.height - 120 }
+                ];
+                this.target = points[Math.floor(Math.random() * points.length)];
+            }
+        }
+        
+        // Initialize Fish
+        playerFish = new Fish(true);
+        allFish.push(playerFish);
+        loadFishData();
+        if (playerFish.disableSoundPrompt == 1) {
+            soundNotice.style.display = 'none';
+        }
+        reconcileFish();
+
+        // Spawn initial set of non-player fish based on saved score
+        for(let i = 0; i < playerFish.numAdditionalFish; i++) {
+            if (allFish.length < 100) { // Hard cap
+                allFish.push(new Fish(false));
+            }
+        }
+
+
+        // --- Food Bubble & Bubbles Logic ---
+        const foodBubble = {
+            x: -100, y: -100, radius: 10, speed: 1, active: false,
+            color: 'rgba(255, 255, 0, 0.7)', borderColor: 'rgba(255, 255, 0, 0.9)',
+            direction: -1, // -1 for rising, 1 for falling
+
+            spawn: function() { // Auto-spawn from bottom
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height - 90;
+                this.radius = Math.random() * 5 + 2;
+                this.speed = Math.random() * 0.5 + 0.8;
+                this.direction = -1;
+                this.active = true;
+            },
+            
+            spawnFromTop: function() { // Manual spawn from top
+                if (this.active) return; // Don't spawn if one is already active
+                this.x = Math.random() * canvas.width;
+                this.y = -20; // Start off-screen top
+                this.radius = Math.random() * 5 + 2;
+                this.speed = Math.random() * 0.5 + 0.8;
+                this.direction = 1;
+                this.active = true;
+            },
+
+            draw: function() {
+                if (!this.active) return;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.strokeStyle = this.borderColor;
+                ctx.lineWidth = 2;
+                ctx.fill();
+                ctx.stroke();
+            },
+
+            update: function() {
+                if (!this.active) return;
+                this.y += this.speed * this.direction;
+
+                // Check boundaries
+                if (this.direction === -1 && this.y < -this.radius) { // Rising off top
+                    this.active = false;
+                } else if (this.direction === 1 && this.y > canvas.height + this.radius) { // Falling off bottom
+                    this.active = false;
+                }
+            }
+        };
+
+        function scheduleNextFoodBubble() {
+            const delay = Math.random() * 120000 + 60000;
+            setTimeout(() => {
+                if (!foodBubble.active) foodBubble.spawn();
+                scheduleNextFoodBubble();
+            }, delay);
+        }
+
+        let bubbles = [];
+        const numBubbles = 25;
+        class Bubble {
+            constructor() {
+                this.reset();
+                this.y = Math.random() * canvas.height;
+            }
+            reset() {
+                this.x = Math.random() * canvas.width;
+                this.y = canvas.height + Math.random() * 100;
+                this.radius = Math.random() * 5 + 1;
+                this.speed = Math.random() * 1 + 0.5;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 1;
+                ctx.fill();
+                ctx.stroke();
+            }
+            update() {
+                this.y -= this.speed;
+                if (this.y < -this.radius) this.reset();
+            }
+        }
+        for (let i = 0; i < numBubbles; i++) bubbles.push(new Bubble());
+        
+        // --- Treasure Chest Bubbles ---
+        let treasureBubbles = [];
+        const numTreasureBubbles = 7; 
+        class TreasureBubble extends Bubble {
+            constructor() {
+                super();
+            }
+            reset() {
+                const chestX = canvas.width * 0.2;
+                this.x = chestX + (Math.random() - 0.5) * 60;
+                this.y = canvas.height - 110 + (Math.random() * 10);
+                this.radius = Math.random() * 8 + 4; 
+                this.speed = Math.random() * 1 + 1;
+            }
+        }
+        for (let i = 0; i < numTreasureBubbles; i++) {
+            treasureBubbles.push(new TreasureBubble());
+        }
+
+        // --- Scenery Drawing ---
+        // Generates the treasure pile once to make it static
+        function generateTreasurePile() {
+            const baseX = canvas.width * 0.2;
+            const baseY = canvas.height - 70;
+            const chestWidth = 80;
+            const chestHeight = 40;
+            const treasureColors = ['#FFD700', '#C0C0C0', '#B94E48', '#007FFF'];
+            
+            treasurePile = []; // Clear previous pile
+            for (let i = 0; i < 400; i++) {
+                const pileFactor = 1 - Math.sqrt(i / 400); // Create a more mounded shape
+                const coin = {
+                    x: baseX + (Math.random() - 0.5) * (chestWidth * 0.9 * pileFactor),
+                    y: (baseY - chestHeight) - (Math.random() * 25 * (1 - pileFactor)),
+                    radius: Math.random() * 2 + 1, // Smaller coins
+                    color: treasureColors[Math.floor(Math.random() * treasureColors.length)]
+                };
+                treasurePile.push(coin);
+            }
+        }
+        
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            generateTreasurePile(); // Regenerate treasure for new size
+        });
+
+        function drawSettingsIcon(x, y, size) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.font = `${size}px Arial`;
+            ctx.fillStyle = isSettingsOpen ? '#00c3ff' : 'rgba(255, 255, 255, 0.8)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('☰', 0, 0);
+            ctx.restore();
+        }
+
+        const settingsIcon = { x: 30, y: 30, size: 25 };
+        const helpIcon = { x: 65, y: 30, size: 25 };
+
+        function drawHelpIcon(x, y, size) {
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.font = `${size}px Arial`;
+            ctx.fillStyle = isHelpOpen ? '#00c3ff' : 'rgba(255, 255, 255, 0.8)';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('?', 0, 0);
+            ctx.restore();
+        }
+
+        function drawUI() {
+            drawSettingsIcon(settingsIcon.x, settingsIcon.y, settingsIcon.size);
+            drawHelpIcon(helpIcon.x, helpIcon.y, helpIcon.size);
+
+            const xStart = helpIcon.x + 20;
+            const yStart = 20;
+
+            if (playerFish.showFPS) {
+                ctx.save();
+                ctx.font = 'bold 22px Arial';
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+                ctx.shadowBlur = 3;
+                ctx.shadowOffsetX = 2;
+                ctx.shadowOffsetY = 2;
+                ctx.fillText(`FPS: ${fps}`, canvas.width - 20, yStart);
+                ctx.restore();
+            }
+
+            const fishNameText = playerFish.name + ":";
+            const scoreText = `  ${playerFish.foodEaten}`;
+
+            ctx.font = 'bold 22px Arial';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.7)';
+            ctx.shadowBlur = 3;
+            ctx.shadowOffsetX = 2;
+            ctx.shadowOffsetY = 2;
+
+            // --- Draw Fish Name and Score ---
+            ctx.fillStyle = '#ff8c00';
+            ctx.fillText(fishNameText + scoreText, xStart, yStart);
+
+            // Reset shadow for other drawings
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.shadowOffsetX = 0;
+            ctx.shadowOffsetY = 0;
+        }
+
+        function drawWater() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#0077be');
+            gradient.addColorStop(1, '#003d7a');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawSand() {
+            ctx.fillStyle = '#d2b48c';
+            ctx.beginPath();
+            ctx.moveTo(0, canvas.height - 80);
+            for (let i = 0; i < canvas.width; i++) {
+                ctx.lineTo(i, canvas.height - 80 + Math.sin(i * 0.01) * 10);
+            }
+            ctx.lineTo(canvas.width, canvas.height);
+            ctx.lineTo(0, canvas.height);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawCastle() {
+            const baseX = canvas.width * 0.75;
+            const baseY = canvas.height - 70;
+            const scale = 1.5;
+
+            const mainColor = '#9E9E9E';
+            const accentColor = '#616161';
+            const roofColor = '#0077be';
+
+            ctx.strokeStyle = accentColor;
+            ctx.lineWidth = 2 * scale;
+
+            const keepWidth = 50 * scale;
+            const keepHeight = 120 * scale;
+            ctx.fillStyle = mainColor;
+            ctx.fillRect(baseX - keepWidth / 2, baseY - keepHeight, keepWidth, keepHeight);
+            ctx.strokeRect(baseX - keepWidth / 2, baseY - keepHeight, keepWidth, keepHeight);
+            
+            const wallWidth = 60 * scale;
+            const wallHeight = 70 * scale;
+            ctx.fillRect(baseX - keepWidth / 2 - wallWidth, baseY - wallHeight, wallWidth, wallHeight);
+            ctx.strokeRect(baseX - keepWidth / 2 - wallWidth, baseY - wallHeight, wallWidth, wallHeight);
+            ctx.fillRect(baseX + keepWidth / 2, baseY - wallHeight, wallWidth, wallHeight);
+            ctx.strokeRect(baseX + keepWidth / 2, baseY - wallHeight, wallWidth, wallHeight);
+
+            ctx.fillStyle = mainColor;
+            const crenelWidth = 10 * scale;
+            const crenelHeight = 10 * scale;
+            
+            for (let i = 0; i < 4; i++) {
+                ctx.fillRect(baseX - keepWidth / 2.3 - wallWidth + (i * (crenelWidth + 4*scale)), baseY - wallHeight - crenelHeight, crenelWidth, crenelHeight);
+            }
+            for (let i = 0; i < 4; i++) {
+                ctx.fillRect(baseX + keepWidth/ 1.7 + (i * (crenelWidth + 4*scale)), baseY - wallHeight - crenelHeight, crenelWidth, crenelHeight);
+            }
+
+            ctx.fillStyle = roofColor;
+            ctx.beginPath();
+            ctx.moveTo(baseX - keepWidth / 2 - (5 * scale), baseY - keepHeight);
+            ctx.lineTo(baseX, baseY - keepHeight - (50 * scale));
+            ctx.lineTo(baseX + keepWidth / 2 + (5 * scale), baseY - keepHeight);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.fillStyle = accentColor;
+            const gateWidth = 30 * scale;
+            const gateHeight = 40 * scale;
+            ctx.beginPath();
+            ctx.moveTo(baseX - gateWidth / 2, baseY);
+            ctx.lineTo(baseX - gateWidth / 2, baseY - (gateHeight * 0.6));
+            ctx.quadraticCurveTo(baseX, baseY - gateHeight, baseX + gateWidth / 2, baseY - (gateHeight * 0.6));
+            ctx.lineTo(baseX + gateWidth / 2, baseY);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        function drawTreasureChest() {
+            const baseX = canvas.width * 0.2;
+            const baseY = canvas.height - 70;
+            const chestWidth = 80;
+            const chestHeight = 40;
+
+            ctx.fillStyle = '#8B4513';
+            ctx.strokeStyle = '#5a2d0c';
+            ctx.lineWidth = 4;
+            ctx.fillRect(baseX - chestWidth / 2, baseY - chestHeight, chestWidth, chestHeight);
+
+            treasurePile.forEach(coin => {
+                ctx.beginPath();
+                ctx.fillStyle = coin.color;
+                ctx.arc(coin.x, coin.y, coin.radius, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            ctx.strokeRect(baseX - chestWidth / 2, baseY - chestHeight, chestWidth, chestHeight);
+        }
+
+        function drawRocks() {
+            ctx.fillStyle = '#696969';
+            ctx.strokeStyle = '#404040';
+            ctx.lineWidth = 1.5;
+
+            ctx.beginPath();
+            ctx.moveTo(100, canvas.height - 70);
+            ctx.lineTo(110, canvas.height - 95);
+            ctx.lineTo(135, canvas.height - 90);
+            ctx.lineTo(150, canvas.height - 75);
+            ctx.lineTo(125, canvas.height - 60);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(canvas.width - 150, canvas.height - 80);
+            ctx.lineTo(canvas.width - 140, canvas.height - 105);
+            ctx.lineTo(canvas.width - 115, canvas.height - 100);
+            ctx.lineTo(canvas.width - 100, canvas.height - 85);
+            ctx.lineTo(canvas.width - 125, canvas.height - 70);
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+
+        function drawPlants() {
+            ctx.strokeStyle = '#006400';
+            ctx.lineWidth = 4;
+            drawSeaweed(canvas.width * 0.3, canvas.height - 70, 200, 20, 0.05);
+            drawSeaweed(canvas.width * 0.3 + 20, canvas.height - 70, 180, 15, 0.06);
+            drawSeaweed(canvas.width * 0.3 + 30, canvas.height - 70, 160, 15, 0.04);
+            drawSeaweed(canvas.width * 0.9, canvas.height - 70, 220, 25, -0.04);
+            drawSeaweed(canvas.width * 0.9 + 20, canvas.height - 70, 180, 25, -0.05);
+        }
+
+        function drawSeaweed(x, y, height, width, sway) {
+            const stalkPath = new Path2D();
+            stalkPath.moveTo(x, y);
+
+            const leaves = [];
+
+            for (let i = 0; i < height; i++) {
+                let swayX = x + Math.sin(i * sway + Date.now() * 0.001) * (width * (1 - i / height));
+                stalkPath.lineTo(swayX, y - i);
+
+                if (i > 10 && i % 15 === 0) { 
+                    leaves.push({ x: swayX, y: y - i, i: i });
+                }
+            }
+
+            ctx.strokeStyle = '#006400';
+            ctx.lineWidth = 4;
+            ctx.stroke(stalkPath);
+
+            ctx.fillStyle = '#008000';
+            leaves.forEach(leaf => {
+                const leafLength = 12 * (1 - leaf.i / height);
+                const leafWidth = 5 * (1 - leaf.i / height);
+                const side = ((leaf.i / 15) % 2 === 0) ? 1 : -1;
+
+                ctx.beginPath();
+                ctx.moveTo(leaf.x, leaf.y);
+                ctx.quadraticCurveTo(leaf.x + side * leafLength * 0.6, leaf.y - leafWidth, leaf.x + side * leafLength, leaf.y - leafWidth * 0.2);
+                ctx.quadraticCurveTo(leaf.x + side * leafLength * 0.6, leaf.y + leafWidth, leaf.x, leaf.y);
+                ctx.fill();
+            });
+        }
+
+        // --- Options Panel Logic ---
+        function showLockedMessage(req) {
+            lockedNotice.textContent = `Your fish must eat ${req} food bubbles to unlock this.`;
+            lockedNotice.style.opacity = '1';
+            clearTimeout(lockedNoticeTimeout);
+            lockedNoticeTimeout = setTimeout(() => { lockedNotice.style.opacity = '0'; }, 3000);
+        }
+
+        function createColorSwatches(containerId, part, requirement) {
+            const container = document.getElementById(containerId);
+            colorOptions.forEach(color => {
+                const swatch = document.createElement('div');
+                swatch.className = 'color-swatch';
+                swatch.style.backgroundColor = color;
+                swatch.dataset.color = color;
+                swatch.addEventListener('click', () => {
+                    if (playerFish.foodEaten >= requirement) {
+                        playerFish[part] = color;
+                        updateSelectedSwatchUI();
+                    } else {
+                        showLockedMessage(requirement);
+                    }
+                });
+                container.appendChild(swatch);
+            });
+        }
+
+        function updateSelectedSwatchUI() {
+            document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+            const outlineSwatch = [...document.getElementById('outlineColorSwatches').children].find(s => s.dataset.color === playerFish.outlineColor);
+            if(outlineSwatch) outlineSwatch.classList.add('selected');
+            const stripesSwatch = [...document.getElementById('stripesColorSwatches').children].find(s => s.dataset.color === playerFish.stripesColor);
+            if(stripesSwatch) stripesSwatch.classList.add('selected');
+            const bodySwatch = [...document.getElementById('bodyColorSwatches').children].find(s => s.dataset.color === playerFish.bodyColor);
+            if(bodySwatch) bodySwatch.classList.add('selected');
+        }
+
+        function updateOptionsLockState() {
+            document.getElementById('outlineColorSection').classList.toggle('locked', playerFish.foodEaten < OUTLINE_REQ);
+            document.getElementById('stripesColorSection').classList.toggle('locked', playerFish.foodEaten < STRIPES_REQ);
+            document.getElementById('bodyColorSection').classList.toggle('locked', playerFish.foodEaten < BODY_REQ);
+        }
+
+        function saveSettings() {
+            const newName = fishNameInput.value.trim();
+            if (newName) playerFish.name = newName.substring(0, 15);
+            playerFish.maxAdditionalFish = parseInt(maxAdditionalFishInput.value, 10);
+            bgMusic.volume = volumeSlider.value / 10;
+            popSound.volume = soundEffectsVolumeSlider.value / 10;
+            playerFish.disableSoundPrompt = parseInt(soundPromptSlider.value, 10);
+            playerFish.showFPS = parseInt(fpsMeterSlider.value, 10);
+            saveFishData();
+            reconcileFish();
+        }
+
+        function toggleSettingsPanel() {
+            if (isSettingsOpen) { // Panel is open, so we're closing it
+                saveSettings();
+            }
+            isSettingsOpen = !isSettingsOpen;
+            if (isSettingsOpen) {
+                fishNameInput.value = playerFish.name;
+                volumeSlider.value = bgMusic.volume * 10;
+                volumeValue.textContent = volumeSlider.value;
+                soundEffectsVolumeSlider.value = popSound.volume * 10;
+                soundEffectsVolumeValue.textContent = soundEffectsVolumeSlider.value;
+                maxAdditionalFishInput.value = playerFish.maxAdditionalFish;
+                maxAdditionalFishValue.textContent = playerFish.maxAdditionalFish;
+                soundPromptSlider.value = playerFish.disableSoundPrompt;
+                soundPromptValue.textContent = playerFish.disableSoundPrompt == 1 ? 'Yes' : 'No';
+                fpsMeterSlider.value = playerFish.showFPS;
+                fpsMeterValue.textContent = playerFish.showFPS == 1 ? 'Enabled' : 'Disabled';
+                updateOptionsLockState();
+                updateSelectedSwatchUI();
+                settingsPanel.classList.add('visible');
+            } else {
+                settingsPanel.classList.remove('visible');
+            }
+        }
+
+        function toggleHelpPanel() {
+            isHelpOpen = !isHelpOpen;
+            if (isHelpOpen) {
+                helpPanel.classList.add('visible');
+            } else {
+                helpPanel.classList.remove('visible');
+            }
+        }
+        
+        createColorSwatches('outlineColorSwatches', 'outlineColor', OUTLINE_REQ);
+        createColorSwatches('stripesColorSwatches', 'stripesColor', STRIPES_REQ);
+        createColorSwatches('bodyColorSwatches', 'bodyColor', BODY_REQ);
+
+        canvas.addEventListener('click', (event) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            const settingsDx = mouseX - settingsIcon.x, settingsDy = mouseY - settingsIcon.y;
+            if (Math.sqrt(settingsDx * settingsDx + settingsDy * settingsDy) < settingsIcon.size) {
+                if (isHelpOpen) toggleHelpPanel();
+                toggleSettingsPanel();
+                return;
+            }
+
+            const helpDx = mouseX - helpIcon.x, helpDy = mouseY - helpIcon.y;
+            if (Math.sqrt(helpDx * helpDx + helpDy * helpDy) < helpIcon.size) {
+                if (isSettingsOpen) toggleSettingsPanel();
+                toggleHelpPanel();
+                return;
+            }
+        });
+
+        // Add keyboard listener for feeding
+        window.addEventListener('keydown', (e) => {
+            if (e.key.toLowerCase() === 'f') {
+                foodBubble.spawnFromTop();
+            }
+        });
+
+        volumeSlider.addEventListener('input', () => { bgMusic.volume = volumeSlider.value / 10; volumeValue.textContent = volumeSlider.value; });
+        soundEffectsVolumeSlider.addEventListener('input', () => { popSound.volume = soundEffectsVolumeSlider.value / 10; soundEffectsVolumeValue.textContent = soundEffectsVolumeSlider.value; });
+        maxAdditionalFishInput.addEventListener('input', () => { maxAdditionalFishValue.textContent = maxAdditionalFishInput.value; });
+        soundPromptSlider.addEventListener('input', () => {
+            soundPromptValue.textContent = soundPromptSlider.value == 1 ? 'Yes' : 'No';
+        });
+        fpsMeterSlider.addEventListener('input', () => {
+            fpsMeterValue.textContent = fpsMeterSlider.value == 1 ? 'Enabled' : 'Disabled';
+        });
+        saveSettingsBtn.addEventListener('click', () => {
+            saveSettings();
+            toggleSettingsPanel(); 
+        });
+
+        // --- Main Animation Loop ---
+        function animate(currentTime) {
+            const deltaTime = currentTime - lastTime;
+            lastTime = currentTime;
+            const currentFPS = Math.round(1000 / deltaTime);
+
+            fpsHistory.push(currentFPS);
+            if (fpsHistory.length > 180) { // Average over 3 seconds (60fps * 3)
+                fpsHistory.shift();
+            }
+
+            const sum = fpsHistory.reduce((a, b) => a + b, 0);
+            fps = Math.round(sum / fpsHistory.length);
+
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawWater();
+            drawSand();
+            drawCastle();
+            drawTreasureChest();
+            drawRocks();
+            drawPlants();
+            if (foodBubble.active) { foodBubble.update(); foodBubble.draw(); }
+            
+            bubbles.forEach(bubble => { bubble.update(); bubble.draw(); });
+            treasureBubbles.forEach(bubble => { bubble.update(); bubble.draw(); });
+            
+            allFish.forEach(fish => {
+                fish.update();
+                fish.draw();
+            });
+
+            // Filter out fish that have left the screen
+            allFish = allFish.filter(fish => {
+                if (fish.state === 'leaving') {
+                    if (fish.x < -fish.size * 2 || fish.x > canvas.width + fish.size * 2) {
+                        return false; // Remove from array
+                    }
+                }
+                return true; // Keep in array
+            });
+            
+            drawUI();
+        }
+
+        // Start animation and food spawning
+        generateTreasurePile(); // Initial generation of static treasure
+        scheduleNextFoodBubble();
+        animate();
+    </script>
 </body>
 </html>
+
