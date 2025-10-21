@@ -69,3 +69,17 @@ footer a {
         margin: 10px 0;
     }
 }
+
+#fishtank-preview {
+    display: none;
+    position: absolute;
+    border: 1px solid #ccc;
+    background: #fff;
+    z-index: 100;
+}
+
+#fishtank-preview iframe {
+    width: 320px;
+    height: 240px;
+    border: none;
+}

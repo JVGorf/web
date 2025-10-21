@@ -18,7 +18,8 @@
     </header>
     <main>
         <h2>Minimalistic Browser Based Fish Sim</h2>
-        <p>For my first project, I made a <a href="https://jvgorf.github.io/fishtank/" target="_blank">browser based idle fish tank sim</a>. You start off with one fish and every few minutes or so, food will float up from the sandy bottom for your fish to eat. For every 50 food that your fish consumes, another fish will join the tank. A cookie stores your options and fish progress.
+        <p>For my first project, I made a <a href="https://jvgorf.github.io/fishtank/" target="_blank" id="fishtank-link">browser based idle fish tank sim</a>. You start off with one fish and every few minutes or so, food will float up from the sandy bottom for your fish to eat. For every 50 food that your fish consumes, another fish will join the tank. A cookie stores your options and fish progress.
+        <div id="fishtank-preview"></div>
         <br><br>
         Note the options icon. From here you can rename and customize the colors of your primary fish buddy after unlocking them with food. Additional fish that join your tank will contain random colors. Since each fish has 3 colors and there is a pool of 18 colors to choose from, that means there are 5832 unique color combinations.
         <br><br>
@@ -99,5 +100,25 @@
     <div id="footer-placeholder"></div>
     <script src="navbar.js"></script>
     <script src="footer.js"></script>
+    <script>
+        const fishtankLink = document.getElementById('fishtank-link');
+        const fishtankPreview = document.getElementById('fishtank-preview');
+
+        fishtankLink.addEventListener('mouseenter', (e) => {
+            const rect = fishtankLink.getBoundingClientRect();
+            fishtankPreview.style.left = rect.right + 'px';
+            fishtankPreview.style.top = rect.top + 'px';
+
+            const iframe = document.createElement('iframe');
+            iframe.src = fishtankLink.href;
+            fishtankPreview.appendChild(iframe);
+            fishtankPreview.style.display = 'block';
+        });
+
+        fishtankLink.addEventListener('mouseleave', () => {
+            fishtankPreview.innerHTML = '';
+            fishtankPreview.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
