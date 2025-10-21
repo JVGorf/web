@@ -29,7 +29,13 @@ nav a {
 }
 
 a:link {
-      color: #e3bc5e; /* Light Yellow */
+    color: #e3bc5e; /* Light Yellow */
+    text-decoration: none;
+    }
+
+a:hover {
+    color: #e3bc5e; /* Light Yellow */
+    text-decoration: underline;
     }
 
 a:visited {
