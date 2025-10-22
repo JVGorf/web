@@ -76,7 +76,7 @@ footer a {
     }
 }
 
-#fishtank-preview {
+#hover-preview {
     display: none;
     position: absolute;
     border: 1px solid #ccc;
@@ -84,7 +84,7 @@ footer a {
     z-index: 100;
 }
 
-#fishtank-preview iframe {
+#hover-preview iframe {
     width: 320px;
     height: 240px;
     border: none;
