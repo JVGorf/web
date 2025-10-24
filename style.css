@@ -1,5 +1,10 @@
+@font-face {
+  font-family: jvg; /* set name of font */
+  src: url('jvg.woff2'); /* url of the font */
+}
+
 body {
-    font-family: sans-serif;
+    font-family: jvg, sans-serif;
     background-color: #47484b; /* 031d40 */
     color: #aaa; /* aaa */
     margin: 0;
@@ -93,4 +98,8 @@ footer a {
     width: 320px;
     height: 240px;
     border: none;
+}
+
+ul {
+    line-height: 1.4;
 }
