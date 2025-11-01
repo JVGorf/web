@@ -100,7 +100,7 @@ footer a {
     border: none;
 }
 
-ul {
+ul, ol {
     line-height: 1.4;
 }
 

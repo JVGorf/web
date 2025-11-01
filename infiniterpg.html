@@ -34,7 +34,7 @@
         *Technically it's not "infinite" because your browser will never contain enough allocated RAM to let you run forever, but effectively it's about as infinite as you can get, especially for a browser RPG.
         </p>
         <h2>Features added so far</h2>
-        <ul>
+        <ol>
         <li>Infinite walkable RPG world played in a browser.</li>
         <li>No account needed.</li>
         <li>Built-in save state lets you continue days, weeks, or years later.</li>    
@@ -42,7 +42,9 @@
         <li>Editable character attributes.</li>
         <li>Zoom in/out.</li>
         <li>Day/night cycles.</li>
-        </ul>
+        <li>Teleportation.</li>
+        </ol>
+        <hr>
     <h2>DevLog</h2>
 <ul>
 <li>10-25-2025</li>
@@ -72,10 +74,21 @@
 <ul>
 <li>10-29-2025</li>
 <li>Colors adjusted for flatter tones.</li>
-<li>I can now specify a generation chance for each randonmly generated terrain character.</li>
-<li>I can now create and apply generation "rules" for a simple ProcGen system.</li>
+<li>I can now specify a generation *chance for each randonmly generated terrain character.</li>
+<li>I can now create and apply generation "rules" for a simple *ProcGen system.</li>
 <li>Todays edits, when combined, results in a more convincing world despite using tiled fonts.</li>
 </ul>
+        
+*This was to generate lakes but the "cluster" rule also worked for mountains. For anyone curious, this isn't a very elaborate procedural generation system but works well for my simple 2D tiled world. By asigning a random chance value to a tile, for example 30% for trees and 50% for grass I can easily simulation natural looking grasslands and forests without further elaboration.
+        <br><br>
+        Lakes on the other hand needs a rule because randomly placed single entities of water tiles ends up looking more like swampland. The solution was to cluster water tiles together into larger groups to simulate lakes. Here is how I did it:
+        <br><br>
+1. First, a random size for the cluster is determined, a value between 8 and 64.<br>
+2. An initial tile is placed.<br>
+3. A neighboring tiles is considered for placement of an additional tiles of the same-type with a 60% chance to add. This is the key part to creating natural looking lakes with irregular yet connected water tiles.<br>
+4. This process continues until the cluster reaches its target determined in step 1.
+        <br><br>
+Whether not I want to apply a rule to a tile is done by asigning the rule to a tile in a simple data table. So far, I've only created one rule (cluster) and it's only been assigned for lakes and mountains. Everything else looks natural by assigning it a chance to spawn value.
         
 <ul>
 <li>10-30-2025</li>
@@ -96,7 +109,25 @@
 <li>Day and night cycles will now persist even if the player is not online.</li>
 <li>More UI/Panel edits.</li>
 </ul>
+        
+<ul>
+<li>11-01-2025</li>
+<li>Build updated to identify the world as 1 of several possible worlds.</li>
+<li>User now gets validation feedback when saving.</li>
+<li>Racall added, limited to 3 binds.</li>
+<li>Fixed an issue in which text in the main panel would flicker.</li>
+<li>Converted* the random generation of tiles with a seedable PRNG.</li>
+<li>Added settings tab in the character panel.</li>
+<li>Added editable seed form field in the settings panel.</li>
+<li>Added caves to the map. (They don't yet function.)</li>
+<li>Added url attribute: ?reset=true.</li>
+</ul>
 
+I often make mistakes most of which don't get displayed in this log. But this one is notable. I grossly misunderstood how much storage space was available in LocalStorage (around 5mb only) and was saving tile data stored in the cache in order to ensure that the world didn't change everytime the player returned.
+<br><br>        
+Traveling in a straight line to around 10,000 tiles was enough to fill this storage space. It is unlikely that anyone would feel the need to travel so far but the primary concept for this game began with an "infinate world" and I want to keep that concept in tact.
+<br><br>
+Since I can't simulate an endless world with such limited storage, I had to create a system that uses a seed to consistently create the same world on the fly during every session of game play. This frees up almost all of the save file leaving plenty of space for game-play data and progress saves while at the same time ensuring a consistent and unchanging world map.
         
     </main>
     <div id="footer-placeholder"></div>
