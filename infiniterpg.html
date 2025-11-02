@@ -26,7 +26,7 @@
     </header>
     <main>
         <h2>An infinite RPG world</h2>
-        <p>I was tossing around this idea for an <a href="https://jvgorf.github.io/InfiniteWorld/" target="_blank" id="hover-link">infinite text based RPG world</a> with a walkable world that runs in your browser. As a proof of concept I came up with a simple random terrain generator that at first wasn't very convincing but it's starting to take shape. It's simple really, it's a top-down world with tiles but instead of using images for the tiles, I'm using a monospace font.</p>
+        <p>I was tossing around this idea for an <a href="https://jvgorf.github.io/geminon/" target="_blank" id="hover-link">infinite text based RPG world</a> with a walkable world that runs in your browser. As a proof of concept I came up with a simple random terrain generator that at first wasn't very convincing but it's starting to take shape. It's simple really, it's a top-down world with tiles but instead of using images for the tiles, I'm using a monospace font.</p>
         <div id="hover-preview"></div>
         
         <p>So it's a little like the OG version of Dwarf Fortress that used ASCII characters but in my case, it's played in a browser and instead of being a colony sim, it's [potentially] an RPG or survival game. <b>The primary feature is that the world is *infinetly large and generated as you explore, which is something you don't often see with a browser game.</b> How far I'll take it remains to be seen but for now it's a concept project.
@@ -79,7 +79,7 @@
 <li>Todays edits, when combined, results in a more convincing world despite using tiled fonts.</li>
 </ul>
         
-*This was to generate lakes but the "cluster" rule also worked for mountains. For anyone curious, this isn't a very elaborate procedural generation system but works well for my simple 2D tiled world. By asigning a random chance value to a tile, for example 30% for trees and 50% for grass I can easily simulation natural looking grasslands and forests without further elaboration.
+*This was to generate lakes but the "cluster" rule also worked for mountains. For anyone curious, this isn't a very elaborate procedural generation system but works well for my simple 2D tiled world. By asigning a random chance value to a tile, for example 30% for trees and 50% for grass I can easily simulate natural looking grasslands and forests without further elaboration.
         <br><br>
         Lakes on the other hand needs a rule because randomly placed single entities of water tiles ends up looking more like swampland. The solution was to cluster water tiles together into larger groups to simulate lakes. Here is how I did it:
         <br><br>
@@ -114,20 +114,20 @@ Whether not I want to apply a rule to a tile is done by asigning the rule to a t
 <li>11-01-2025</li>
 <li>Build updated to identify the world as 1 of several possible worlds.</li>
 <li>User now gets validation feedback when saving.</li>
-<li>Racall added, limited to 3 binds.</li>
+<li>Recall added, limited to 3 binds.</li>
 <li>Fixed an issue in which text in the main panel would flicker.</li>
 <li>Converted* the random generation of tiles with a seedable PRNG.</li>
 <li>Added settings tab in the character panel.</li>
 <li>Added editable seed form field in the settings panel.</li>
 <li>Added caves to the map. (They don't yet function.)</li>
-<li>Added url attribute: ?reset=true.</li>
+<li>Added url attribute: ?reset=true (this deletes save file).</li>
 </ul>
 
 I often make mistakes most of which don't get displayed in this log. But this one is notable. I grossly misunderstood how much storage space was available in LocalStorage (around 5mb only) and was saving tile data stored in the cache in order to ensure that the world didn't change everytime the player returned.
 <br><br>        
-Traveling in a straight line to around 10,000 tiles was enough to fill this storage space. It is unlikely that anyone would feel the need to travel so far but the primary concept for this game began with an "infinate world" and I want to keep that concept in tact.
+Traveling in a straight line to around 10,000 tiles was enough to fill this storage space. It is unlikely that anyone would feel the need to travel so far but the primary concept for this game began with an "infinate world" and I want to keep that concept intact.
 <br><br>
-Since I can't simulate an endless world with such limited storage, I had to create a system that uses a seed to consistently create the same world on the fly during every session of game play. This frees up almost all of the save file leaving plenty of space for game-play data and progress saves while at the same time ensuring a consistent and unchanging world map.
+Since I can't simulate an endless world with such limited storage, I had to create a system that uses a seed to consistently create the same world on the fly during every session of game play. This frees up almost all of the save file leaving plenty of space for game-play data, progress, and settings while at the same time ensuring a consistent and unchanging world map.
         
     </main>
     <div id="footer-placeholder"></div>
